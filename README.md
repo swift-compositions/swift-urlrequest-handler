@@ -1,6 +1,6 @@
 # swift-urlrequest-handler
 
-[![CI](https://github.com/coenttb/swift-urlrequest-handler/workflows/CI/badge.svg)](https://github.com/coenttb/swift-urlrequest-handler/actions/workflows/ci.yml)
+[![CI](https://github.com/swift-compositions/swift-urlrequest-handler/workflows/CI/badge.svg)](https://github.com/swift-compositions/swift-urlrequest-handler/actions/workflows/ci.yml)
 ![Development Status](https://img.shields.io/badge/status-active--development-blue.svg)
 
 A Swift package for URLRequest handling with structured error handling.
@@ -52,7 +52,7 @@ Add the following to your `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/coenttb/swift-urlrequest-handler", from: "0.0.4")
+    .package(url: "https://github.com/swift-compositions/swift-urlrequest-handler", from: "0.0.4")
 ]
 ```
 
@@ -275,14 +275,14 @@ swift test
 
 - [swift-dependencies](https://github.com/pointfreeco/swift-dependencies) (1.9.2+)
 - [swift-log](https://github.com/apple/swift-log) (1.0.0+)
-- [swift-logger-dependencies](https://github.com/swift-foundations/swift-logger-dependencies)
+- [swift-logger-dependencies](https://github.com/swift-compositions/swift-logger-dependencies)
 - [xctest-dynamic-overlay](https://github.com/pointfreeco/xctest-dynamic-overlay) (1.4.3+)
 
 ## Related Packages
 
 ### Dependencies
 
-- [swift-logger-dependencies](https://github.com/swift-foundations/swift-logger-dependencies): The focused Swift Logging × Dependencies integration.
+- [swift-logger-dependencies](https://github.com/swift-compositions/swift-logger-dependencies): The focused Swift Logging × Dependencies integration.
 
 ### Used By
 

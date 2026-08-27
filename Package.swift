@@ -29,8 +29,8 @@ let package = Package(
         .library(name: .urlRequestHandler, targets: [.urlRequestHandler])
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-foundations/swift-dependencies.git", branch: "main"),
-        .package(url: "https://github.com/swift-foundations/swift-logger-dependencies.git", branch: "main"),
+        .package(url: "https://github.com/swift-compositions/swift-dependencies.git", branch: "main"),
+        .package(url: "https://github.com/swift-compositions/swift-logger-dependencies.git", branch: "main"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")
     ],
     targets: [

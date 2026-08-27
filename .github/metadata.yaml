@@ -1,7 +1,7 @@
 # .github/metadata.yaml
 description: "URLRequest handling with structured error handling for Swift."
 topics:
-  - foundations
+  - compositions
   - url-request
   - networking
 homepage: "https://swift-institute.org"
