@@ -2,21 +2,6 @@
 
 import PackageDescription
 
-extension String {
-    static let urlRequestHandler: Self = "URLRequestHandler"
-}
-
-extension Target.Dependency {
-    static var urlRequestHandler: Self { .target(name: .urlRequestHandler) }
-}
-
-extension Target.Dependency {
-    static var dependencies: Self { .product(name: "Dependencies", package: "swift-dependencies") }
-    static var dependenciesTestSupport: Self { .product(name: "Dependencies Test Support", package: "swift-dependencies") }
-    static var loggerDependencies: Self { .product(name: "Logger Dependencies", package: "swift-logger-dependencies") }
-    static var logging: Self { .product(name: "Logging", package: "swift-log") }
-}
-
 let package = Package(
     name: "swift-urlrequest-handler",
     platforms: [
@@ -26,7 +11,7 @@ let package = Package(
       .watchOS("27")
     ],
     products: [
-        .library(name: .urlRequestHandler, targets: [.urlRequestHandler])
+        .library(name: "URLRequestHandler", targets: ["URLRequestHandler"])
     ],
     dependencies: [
         .package(url: "https://github.com/swift-compositions/swift-dependencies.git", branch: "main"),
@@ -35,21 +20,20 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: .urlRequestHandler,
+            name: "URLRequestHandler",
             dependencies: [
-                .dependencies,
-                .loggerDependencies,
-                .logging
+                .product(name: "Dependencies", package: "swift-dependencies"),
+                .product(name: "Logger Dependencies", package: "swift-logger-dependencies"),
+                .product(name: "Logging", package: "swift-log")
             ]
         ),
         .testTarget(
-            name: .urlRequestHandler.tests,
+            name: "URLRequestHandler Tests",
             dependencies: [
-                .urlRequestHandler,
-                .dependenciesTestSupport
+                .target(name: "URLRequestHandler"),
+                .product(name: "Dependencies Test Support", package: "swift-dependencies")
             ]
         )
     ]
 )
 
-extension String { var tests: Self { self + " Tests" } }
