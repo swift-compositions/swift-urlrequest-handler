@@ -1,12 +1,7 @@
 import Dependencies_Test_Support
-import Foundation
 import Testing
 
 @testable import URLRequestHandler
-
-#if canImport(FoundationNetworking)
-    import FoundationNetworking
-#endif
 
 @Suite(.dependencies)
 struct URLRequestHandlerTests {
@@ -14,26 +9,17 @@ struct URLRequestHandlerTests {
 
     @Test
     func `Successful Direct Response`() async throws {
-        let mockData = Data(
-            """
-            {"id": "123", "name": "Test User", "email": "test@example.com"}
-            """.utf8
-        )
-
         try await withDependencies {
-            $0.defaultSession = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (mockData, response)
-            }
+            $0.defaultSession = Fixture.session(
+                statusCode: 200,
+                body: """
+                    {"id": "123", "name": "Test User", "email": "test@example.com"}
+                    """
+            )
         } operation: {
             @Dependency(\.defaultRequestHandler) var handler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/user")!)
+            let request = Fixture.request("https://api.example.com/user")
             let user: User = try await handler(
                 for: request,
                 decodingTo: User.self
@@ -47,31 +33,22 @@ struct URLRequestHandlerTests {
 
     @Test
     func `Successful Envelope Response`() async throws {
-        let mockData = Data(
-            """
-            {
-                "success": true,
-                "data": {"id": "456", "name": "Envelope User", "email": "envelope@example.com"},
-                "message": "User fetched successfully",
-                "timestamp": "2024-01-01T00:00:00Z"
-            }
-            """.utf8
-        )
-
         try await withDependencies {
-            $0.defaultSession = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (mockData, response)
-            }
+            $0.defaultSession = Fixture.session(
+                statusCode: 200,
+                body: """
+                    {
+                        "success": true,
+                        "data": {"id": "456", "name": "Envelope User", "email": "envelope@example.com"},
+                        "message": "User fetched successfully",
+                        "timestamp": "2024-01-01T00:00:00Z"
+                    }
+                    """
+            )
         } operation: {
             @Dependency(\.defaultRequestHandler) var handler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/user")!)
+            let request = Fixture.request("https://api.example.com/user")
             let user: User = try await handler(
                 for: request,
                 decodingTo: User.self
@@ -86,19 +63,11 @@ struct URLRequestHandlerTests {
     @Test
     func `Void Request`() async throws {
         try await withDependencies {
-            $0.defaultSession = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 204,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (Data(), response)
-            }
+            $0.defaultSession = Fixture.session(statusCode: 204)
         } operation: {
             @Dependency(\.defaultRequestHandler) var handler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/logout")!)
+            let request = Fixture.request("https://api.example.com/logout")
 
             // Should not throw
             try await handler(for: request)
@@ -109,26 +78,17 @@ struct URLRequestHandlerTests {
 
     @Test
     func `HTTPError`() async throws {
-        let errorData = Data(
-            """
-            {"message": "User not found"}
-            """.utf8
-        )
-
         try await withDependencies {
-            $0.defaultSession = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 404,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (errorData, response)
-            }
+            $0.defaultSession = Fixture.session(
+                statusCode: 404,
+                body: """
+                    {"message": "User not found"}
+                    """
+            )
         } operation: {
             @Dependency(\.defaultRequestHandler) var handler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/user/999")!)
+            let request = Fixture.request("https://api.example.com/user/999")
 
             do {
                 let _: User = try await handler(
@@ -149,26 +109,17 @@ struct URLRequestHandlerTests {
 
     @Test
     func `Decoding Error`() async throws {
-        let invalidData = Data(
-            """
-            {"invalid": "json structure"}
-            """.utf8
-        )
-
         try await withDependencies {
-            $0.defaultSession = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (invalidData, response)
-            }
+            $0.defaultSession = Fixture.session(
+                statusCode: 200,
+                body: """
+                    {"invalid": "json structure"}
+                    """
+            )
         } operation: {
             @Dependency(\.defaultRequestHandler) var handler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/user")!)
+            let request = Fixture.request("https://api.example.com/user")
 
             do {
                 let _: User = try await handler(
@@ -189,31 +140,22 @@ struct URLRequestHandlerTests {
 
     @Test
     func `Envelope With No Data`() async throws {
-        let mockData = Data(
-            """
-            {
-                "success": true,
-                "data": null,
-                "message": "No data available",
-                "timestamp": "2024-01-01T00:00:00Z"
-            }
-            """.utf8
-        )
-
         try await withDependencies {
-            $0.defaultSession = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (mockData, response)
-            }
+            $0.defaultSession = Fixture.session(
+                statusCode: 200,
+                body: """
+                    {
+                        "success": true,
+                        "data": null,
+                        "message": "No data available",
+                        "timestamp": "2024-01-01T00:00:00Z"
+                    }
+                    """
+            )
         } operation: {
             @Dependency(\.defaultRequestHandler) var handler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/user")!)
+            let request = Fixture.request("https://api.example.com/user")
 
             do {
                 let _: User = try await handler(
@@ -231,27 +173,19 @@ struct URLRequestHandlerTests {
 
     @Test
     func `Default Session Key`() async throws {
-        let mockData = Data("test".utf8)
-        let mockResponse = HTTPURLResponse(
-            url: URL(string: "https://example.com")!,
-            statusCode: 200,
-            httpVersion: nil,
-            headerFields: nil
-        )!
+        let probe = Fixture.SessionProbe()
 
         try await withDependencies {
-            $0.defaultSession = { request in
-                #expect(request.url?.absoluteString == "https://example.com")
-                return (mockData, mockResponse)
-            }
+            $0.defaultSession = probe.session
         } operation: {
             @Dependency(\.defaultSession) var session
 
-            let request = URLRequest(url: URL(string: "https://example.com")!)
+            let request = Fixture.request("https://example.com")
             let (data, response) = try await session(request)
 
-            #expect(data == mockData)
-            #expect(response == mockResponse)
+            #expect(probe.requestedURLStrings == ["https://example.com"])
+            #expect(probe.returnedData(data))
+            #expect(probe.returnedResponse(response))
         }
     }
 
@@ -259,25 +193,21 @@ struct URLRequestHandlerTests {
 
     @Test
     func `Envelope Decoding`() throws {
-        let json = Data(
-            """
-            {
-                "success": true,
-                "data": {"value": "test"},
-                "message": "Success",
-                "timestamp": "2024-01-01T00:00:00Z"
-            }
-            """.utf8
-        )
-
         struct TestData: Decodable {
             let value: String
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-
-        let envelope = try decoder.decode(Envelope<TestData>.self, from: json)
+        let envelope = try Fixture.decodeISO8601(
+            Envelope<TestData>.self,
+            json: """
+                {
+                    "success": true,
+                    "data": {"value": "test"},
+                    "message": "Success",
+                    "timestamp": "2024-01-01T00:00:00Z"
+                }
+                """
+        )
 
         #expect(envelope.success == true)
         #expect(envelope.data?.value == "test")
@@ -297,11 +227,7 @@ struct URLRequestHandlerTests {
             message: "Test message"
         )
 
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-
-        let data = try encoder.encode(envelope)
-        let json = String(data: data, encoding: .utf8)!
+        let json = try Fixture.encodeISO8601String(envelope)
 
         #expect(json.contains("\"success\":true"))
         #expect(json.contains("\"value\":\"test\""))
@@ -313,25 +239,15 @@ struct URLRequestHandlerTests {
 
     @Test
     func `Custom Decoder`() async throws {
-        let mockData = Data(
-            """
-            {"user_id": "789", "user_name": "Snake Case User", "email_address": "snake@example.com"}
-            """.utf8
-        )
-
         try await withDependencies {
-            $0.defaultSession = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (mockData, response)
-            }
+            $0.defaultSession = Fixture.session(
+                statusCode: 200,
+                body: """
+                    {"user_id": "789", "user_name": "Snake Case User", "email_address": "snake@example.com"}
+                    """
+            )
         } operation: {
-            var handler = URLRequest.Handler()
-            handler.decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let handler = Fixture.handlerConvertingFromSnakeCase()
 
             struct SnakeCaseUser: Decodable {
                 let userId: String
@@ -339,7 +255,7 @@ struct URLRequestHandlerTests {
                 let emailAddress: String
             }
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/user")!)
+            let request = Fixture.request("https://api.example.com/user")
             let user: SnakeCaseUser = try await handler(
                 for: request,
                 decodingTo: SnakeCaseUser.self

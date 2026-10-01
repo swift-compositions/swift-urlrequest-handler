@@ -1,12 +1,7 @@
 import Dependencies_Test_Support
-import Foundation
 import Testing
 
 @testable import URLRequestHandler
-
-#if canImport(FoundationNetworking)
-    import FoundationNetworking
-#endif
 
 @Suite(.dependencies)
 struct Test {
@@ -22,24 +17,16 @@ struct Test {
         }
 
         try await withDependencies {
-            $0.defaultSession = { request in
-                let data = Data(
-                    """
+            $0.defaultSession = Fixture.session(
+                statusCode: 200,
+                body: """
                     {"id": "123", "name": "John Doe", "email": "john@example.com"}
-                    """.utf8
-                )
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (data, response)
-            }
+                    """
+            )
         } operation: {
             @Dependency(\.defaultRequestHandler) var requestHandler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/users/123")!)
+            let request = Fixture.request("https://api.example.com/users/123")
 
             let user: User = try await requestHandler(
                 for: request,
@@ -62,29 +49,21 @@ struct Test {
         }
 
         try await withDependencies {
-            $0.defaultSession = { request in
-                let data = Data(
-                    """
+            $0.defaultSession = Fixture.session(
+                statusCode: 200,
+                body: """
                     {
                       "success": true,
                       "data": { "id": "123", "name": "John" },
                       "message": "User fetched successfully",
                       "timestamp": "2024-01-01T00:00:00Z"
                     }
-                    """.utf8
-                )
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (data, response)
-            }
+                    """
+            )
         } operation: {
             @Dependency(\.defaultRequestHandler) var requestHandler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/user")!)
+            let request = Fixture.request("https://api.example.com/user")
 
             let user: User = try await requestHandler(
                 for: request,
@@ -105,26 +84,16 @@ struct Test {
         }
 
         try await withDependencies {
-            $0.defaultSession = { request in
-                let data = Data(
-                    """
+            $0.defaultSession = Fixture.session(
+                statusCode: 200,
+                body: """
                     {"id": "123"}
-                    """.utf8
-                )
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (data, response)
-            }
+                    """
+            )
         } operation: {
-            let handler = URLRequest.Handler()
-            handler.decoder.dateDecodingStrategy = .secondsSince1970
-            handler.decoder.keyDecodingStrategy = .useDefaultKeys
+            let handler = Fixture.handlerDecodingSecondsSince1970WithDefaultKeys()
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/test")!)
+            let request = Fixture.request("https://api.example.com/test")
 
             let response: Response = try await handler(
                 for: request,
@@ -140,20 +109,11 @@ struct Test {
     @Test
     func `README Line 108-117: Void Requests`() async throws {
         try await withDependencies {
-            $0.defaultSession = { request in
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 204,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (Data(), response)
-            }
+            $0.defaultSession = Fixture.session(statusCode: 204)
         } operation: {
             @Dependency(\.defaultRequestHandler) var requestHandler
 
-            var request = URLRequest(url: URL(string: "https://api.example.com/logout")!)
-            request.httpMethod = "POST"
+            let request = Fixture.request("https://api.example.com/logout", method: "POST")
 
             // Should not throw
             try await requestHandler(for: request)
@@ -170,24 +130,16 @@ struct Test {
 
         // Test HTTP Error
         try await withDependencies {
-            $0.defaultSession = { request in
-                let data = Data(
-                    """
+            $0.defaultSession = Fixture.session(
+                statusCode: 404,
+                body: """
                     {"message": "Not found"}
-                    """.utf8
-                )
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 404,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (data, response)
-            }
+                    """
+            )
         } operation: {
             @Dependency(\.defaultRequestHandler) var requestHandler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/user")!)
+            let request = Fixture.request("https://api.example.com/user")
 
             do {
                 let _ = try await requestHandler(
@@ -212,24 +164,16 @@ struct Test {
         }
 
         try await withDependencies {
-            $0.defaultSession = { request in
-                let data = Data(
-                    """
+            $0.defaultSession = Fixture.session(
+                statusCode: 200,
+                body: """
                     {"id": "123", "name": "Test User"}
-                    """.utf8
-                )
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (data, response)
-            }
+                    """
+            )
         } operation: {
             @Dependency(\.defaultRequestHandler) var handler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/user")!)
+            let request = Fixture.request("https://api.example.com/user")
             let user: User = try await handler(
                 for: request,
                 decodingTo: User.self
@@ -249,25 +193,16 @@ struct Test {
         }
 
         try await withDependencies {
-            $0.defaultSession = { request in
-                // Custom session configuration would be applied here
-                let data = Data(
-                    """
+            $0.defaultSession = Fixture.session(
+                statusCode: 200,
+                body: """
                     {"id": "123"}
-                    """.utf8
-                )
-                let response = HTTPURLResponse(
-                    url: request.url!,
-                    statusCode: 200,
-                    httpVersion: nil,
-                    headerFields: nil
-                )!
-                return (data, response)
-            }
+                    """
+            )
         } operation: {
             @Dependency(\.defaultRequestHandler) var handler
 
-            let request = URLRequest(url: URL(string: "https://api.example.com/test")!)
+            let request = Fixture.request("https://api.example.com/test")
             let response: Response = try await handler(
                 for: request,
                 decodingTo: Response.self
@@ -281,13 +216,11 @@ struct Test {
 
     @Test
     func `README Line 198-208: URLRequest.Handler API`() {
-        let handler = URLRequest.Handler(debug: false, decoder: JSONDecoder())
+        let handler = Fixture.handler(debug: false)
 
         #expect(handler.debug == false)
 
-        let customDecoder = JSONDecoder()
-        customDecoder.dateDecodingStrategy = .iso8601
-        let handlerWithCustomDecoder = URLRequest.Handler(debug: true, decoder: customDecoder)
+        let handlerWithCustomDecoder = Fixture.handlerWithISO8601Decoder(debug: true)
 
         #expect(handlerWithCustomDecoder.debug == true)
     }
@@ -327,16 +260,10 @@ struct Test {
         #expect(envelope.success == true)
         #expect(envelope.data == TestData(value: "test"))
         #expect(envelope.message == "Success")
-        #expect(envelope.timestamp <= Date())
+        #expect(Fixture.isNotInTheFuture(envelope.timestamp))
 
         // Test encoding/decoding
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let data = try encoder.encode(envelope)
-
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let decoded = try decoder.decode(Envelope<TestData>.self, from: data)
+        let decoded = try Fixture.roundTripISO8601(envelope)
 
         #expect(decoded.success == envelope.success)
         #expect(decoded.data == envelope.data)
