@@ -11,7 +11,10 @@ enum Fixture {
     typealias Session = @Sendable (URLRequest) async throws -> (Data, URLResponse)
 
     static func request(_ url: String, method: String? = nil) -> URLRequest {
-        var request = URLRequest(url: URL(string: url)!)
+        guard let requestURL = URL(string: url) else {
+            preconditionFailure("Fixture URL string is not a valid URL: \(url)")
+        }
+        var request = URLRequest(url: requestURL)
         if let method {
             request.httpMethod = method
         }
@@ -20,12 +23,16 @@ enum Fixture {
 
     static func session(statusCode: Int, body: String = "") -> Session {
         { request in
-            let response = HTTPURLResponse(
-                url: request.url!,
-                statusCode: statusCode,
-                httpVersion: nil,
-                headerFields: nil
-            )!
+            guard let url = request.url,
+                let response = HTTPURLResponse(
+                    url: url,
+                    statusCode: statusCode,
+                    httpVersion: nil,
+                    headerFields: nil
+                )
+            else {
+                preconditionFailure("Fixture session needs a request URL and a valid status code")
+            }
             return (Data(body.utf8), response)
         }
     }
@@ -66,7 +73,10 @@ enum Fixture {
     static func encodeISO8601String<T: Encodable>(_ value: T) throws -> String {
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
-        return String(data: try encoder.encode(value), encoding: .utf8)!
+        guard let string = String(data: try encoder.encode(value), encoding: .utf8) else {
+            preconditionFailure("JSONEncoder output is always valid UTF-8")
+        }
+        return string
     }
 
     static func roundTripISO8601<T: Codable>(_ value: T) throws -> T {
@@ -86,12 +96,19 @@ enum Fixture {
 extension Fixture {
     final class SessionProbe: Sendable {
         let data = Data("test".utf8)
-        nonisolated(unsafe) let response = HTTPURLResponse(
-            url: URL(string: "https://example.com")!,
-            statusCode: 200,
-            httpVersion: nil,
-            headerFields: nil
-        )!
+        nonisolated(unsafe) let response: HTTPURLResponse = {
+            guard let url = URL(string: "https://example.com"),
+                let response = HTTPURLResponse(
+                    url: url,
+                    statusCode: 200,
+                    httpVersion: nil,
+                    headerFields: nil
+                )
+            else {
+                preconditionFailure("Fixture response is valid")
+            }
+            return response
+        }()
         private let requestedURLs = Mutex<[String?]>([])
 
         var session: Session {
